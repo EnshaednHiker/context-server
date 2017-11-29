@@ -8,5 +8,5 @@ deployment:
   staging:
     branch: master
     heroku:
-      appname: tessellated-security
-      url: "https://git.heroku.com/tessellated-security.git"
+      appname: context-server
+      url: "https://git.heroku.com/context-server.git"
