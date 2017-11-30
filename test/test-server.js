@@ -170,6 +170,26 @@ describe('Context API', function() {
           expect(decryptedResponseToken.exp).to.be.above(decryptedResponseToken.iat);
         })
     });
+    it('GET endpoint: an already logged in user should see their logged in user information', function(){
+      let user = auth.jwt.verify(authenticatedToken, auth.secret);
+      console.log("consoling out user:", user);
+      return chai.request(app)
+        .get(`/user/${user.id}`)
+        .set("Authorization", `Bearer ${authenticatedToken}`)
+        .then(function(res){
+          //this is an authentication token that gets created after we've successfully logged in, will be reused in protected endpoint tests for testing when a user is logged in
+          authenticatedToken = res.body.user.token;
+          //make more assertions, confirm username, email, and token are all being sent
+          res.body.user.email.should.equal("tesseluser40@gmail.com");
+          res.body.user.token.should.be.a('string');
+          res.body.user.username.should.equal(user.username);
+          //decrypt the token and see what's in there, any good assertions to be made there?
+          decryptedResponseToken = auth.jwt.verify(res.body.user.token, auth.secret);
+          //.exp is when the token expires while .iat is when the token was created, exp should be larger (come after) than iat
+          expect(decryptedResponseToken.exp).to.be.above(decryptedResponseToken.iat);
+          res.should.have.status(200);
+        });
+    });
     it("PUT endpoint: a user needs to be able to update one's username, email, or password to new credentials", function(){
       
       let userNewCredentials =  {

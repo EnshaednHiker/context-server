@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/EnshaednHiker/context-server#readme",
   "dependencies": {
-    "babel-core": "^6.26.0",
     "body-parser": "^1.17.1",
     "chai": "^3.5.0",
     "chai-http": "^3.0.0",
