@@ -41,4 +41,5 @@
   "engines": {
     "node": "6.11.1"
   }
+  "license": "MIT"
 }
