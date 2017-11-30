@@ -58,7 +58,7 @@ function tearDownDb() {
     return mongoose.connection.dropDatabase();
 }
 
-describe('Tessellated Security API', function() {
+describe('Context API', function() {
   
   before(function() {
     return runServer(TEST_DATABASE_URL);
