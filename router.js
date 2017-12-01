@@ -10,6 +10,9 @@ const passport = require('./passport');
 const User = require('./models');
 const auth = require('./auth');
 
+Array.min = function (array) {
+  return Math.min.apply(Math, array);
+}
 
 //put this in server, placed before pulling in or declaring any routes to all cross origin requests
 router.all('*', function(req, res, next) {
@@ -132,6 +135,57 @@ router.delete('/user/:ID', auth.required, (req,res,next)=>{
   })
   .catch(next);
 });
+
+//endpoint to get recent searches
+router.get('/user/:ID/searches', auth.required, (req,res,next)=>{
+  return User.findById(req.params.ID)
+    .then((user)=>{
+      if(!user){ return res.sendStatus(401); }
+      return res.json({searches:user.toAuthSearchesJSON()});
+    });
+});
+
+//endpoint to post new searches to the recent searches
+router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
+  let searches;
+  return User.findById(req.params.ID)
+  .then((user)=>{
+    if(!user){ return res.sendStatus(401); }
+    
+    let search = user.recentSearches.create({
+        searchURL:req.body.search    
+    });
+    user.recentSearches.addToSet(search);
+    console.log("user so far: ", user);
+    searches = user.recentSearches;
+
+    return user.save().then( () =>{
+      console.log('current state of the searches: ', searches);
+      //logic pruning searches down to most recent 10 if necessary
+      if(searches.length > 10) {
+        let searchesNumberArray = searches.map((search) => {
+          return search.dateCreated
+        });
+        console.log("searchesNumberArray", searchesNumberArray);
+        let min = Array.min(searchesNumberArray)
+        let reducedSearches = searches.filter(search => search.dateCreated !== min);
+        console.log("reducedSearches after removing smallest search", reducedSearches);
+        searches = reducedSearches;
+      }
+      
+      return User.findById(req.params.ID)
+        .then((user)=>{
+          console.log("did I get my user again?", user);
+          user.recentSearches = searches;
+          return user.save().then( () =>{
+            return res.status(201).json({searches:user.toAuthSearchesJSON()});
+          });
+        }) 
+    });
+  })
+  .catch(next);
+});
+//endpoint to clear (delete) recent searches
 
 
 

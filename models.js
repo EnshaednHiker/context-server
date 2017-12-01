@@ -6,9 +6,9 @@ const jwt = require('jsonwebtoken');
 const {SECRET} = require('./config');
 
 //Device schema requires that the device name be unique and is required, is a child of the user schema
-const deviceSchema = mongoose.Schema({
-  deviceName: {type: String, required: [true, "can't be blank"]/*, unique: true*/},
-  deviceToken: String
+const recentSearchesSchema = mongoose.Schema({
+  searchURL: {type: String, required: [true, "can't be blank"]},
+  dateCreated: {type: Number, default: Date.now}
 }, {timestamps: true});
 
 //User schema is requires that usernames and emails are unique and required
@@ -17,7 +17,7 @@ const userSchema = mongoose.Schema({
   email: {type: String, required: [true, "can't be blank"], match: [/\S+@\S+\.\S+/, 'is invalid'], unique: true},
   hash: String,
   salt: String,
-  devices: [deviceSchema]
+  recentSearches: [recentSearchesSchema]
 }, {timestamps: true});
 
 //Encrypts password via crypto before seeding into the database
@@ -56,35 +56,18 @@ userSchema.methods.validPassword = function (password, user){
 };
 
 //Child schemas do not get their own instance methods, have to assign them to the parent
-//Generates a token for a device without an expiration date
-userSchema.methods.generateDeviceJWT = function(deviceName,deviceId) {
-    return jwt.sign({
-    userId: this._id,
-    deviceName: deviceName,
-    deviceId: deviceId
-  }, SECRET);
-};
-
-//Child schemas do not get their own instance methods, have to assign them to the parent
 //JSON to be sent to the client after a new device created or updated or deleted
-userSchema.methods.toAuthDevicesJSON = function(){
+userSchema.methods.toAuthSearchesJSON = function(){
 
-  return this.devices.map(function(device){
+  return this.recentSearches.map(function(search){
     return {
-      deviceName: device.deviceName,
-      deviceToken: device.deviceToken,
-      deviceId: device._id
+      searchURL: search.searchURL,
+      dateCreated: search.dateCreated,
+      searchID: search._id
     };
   },this);
 };
 
-userSchema.methods.toAuthDeviceJSON = function(device){
-    return {
-      deviceName: device.deviceName,
-      deviceToken: device.deviceToken,
-      deviceId: device._id
-    };
-};
 
 //the unique validator plugin has to be added prior to assigning the schema to the const User, fyi
 userSchema.plugin(uniqueValidator);
