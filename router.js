@@ -148,38 +148,48 @@ router.get('/user/:ID/searches', auth.required, (req,res,next)=>{
 //endpoint to post new searches to the recent searches
 router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
   let searches;
+  let oldestSearch;
   return User.findById(req.params.ID)
   .then((user)=>{
     if(!user){ return res.sendStatus(401); }
     
     let search = user.recentSearches.create({
-        searchURL:req.body.search    
+      searchURL:req.body.search    
     });
     user.recentSearches.addToSet(search);
-    console.log("user so far: ", user);
     searches = user.recentSearches;
-
-    return user.save().then( () =>{
-      console.log('current state of the searches: ', searches);
-      //logic pruning searches down to most recent 10 if necessary
-      if(searches.length > 10) {
+    return user
+      .save().then( () =>{
+        console.log('current state of the searches: ', searches);
+        //find oldest entry
         let searchesNumberArray = searches.map((search) => {
           return search.dateCreated
         });
         console.log("searchesNumberArray", searchesNumberArray);
         let min = Array.min(searchesNumberArray)
-        let reducedSearches = searches.filter(search => search.dateCreated !== min);
-        console.log("reducedSearches after removing smallest search", reducedSearches);
-        searches = reducedSearches;
-      }
-      
-      return User.findById(req.params.ID)
-        .then((user)=>{
-          console.log("did I get my user again?", user);
-          user.recentSearches = searches;
-          return user.save().then( () =>{
-            return res.status(201).json({searches:user.toAuthSearchesJSON()});
-          });
+        oldestSearch = searches.find(search => {
+          return search.dateCreated === min;
+        });
+        console.log("oldestSearch: ",oldestSearch);
+        //then get the right user back
+        return User.findById(req.params.ID)
+          .then((user)=>{
+            console.log("did I get my user again?", user);
+            //if there are more than 10 searches
+            if (user.recentSearches.length > 10) {
+              //remove the oldest search
+              return user.recentSearches.id(oldestSearch._id).remove().then( () =>{
+                //and save it
+                return user.save().then((user)=>{
+                    //and send the response with the updated list
+                    return res.status(201).json({searches:user.toAuthSearchesJSON()});
+                  });
+              });
+            }
+            //else just send the response with the list that is 10 or less
+            else {
+              return res.status(201).json({searches:user.toAuthSearchesJSON()});
+            }
         }) 
     });
   })

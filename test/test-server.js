@@ -47,25 +47,9 @@ function seedUserData() {
         .set("Content-Type", "application/json")
         .send({"payload":payload})
         .then((res) => {
-          console.log("what's in res.body: ", res.body); 
           console.info("seeded user: ", res.body.user.username);
         });
   });
-}
-function seedWebsiteData(token, secret) {
-  const dummyWebsites = ["www.2.com","www.3.com","www.4.com","www.5.com",
-                         "www.6.com","www.7.com","www.8.com","www.9.com","www.10.com"]
-  let user = auth.jwt.verify(token, secret);
-  dummyWebsites.forEach(function(website){
-    return chai.request(app)
-    .post(`/user/${user.id}/searches`)
-    .set("Authorization", `Bearer ${token}`)
-    .send({search: website})
-    .then(function(res){
-      console.info("seeded website: ", res.searches);
-    });
-  });
-
 }
 
 // this function deletes the entire database.
@@ -260,8 +244,50 @@ describe('Context API', function() {
             expect(_user.validPassword(userOldCredentials.password, _user)).to.be.true;
           }); 
     });
-    it("POST endpoint: a user needs to be able to add searches to recent searches", function(){
-      let website = "www.1.com";
+    it("POST endpoint: a user entering 10 websites sees all 10 websites get added", function(){
+      const dummyWebsites = ["www.1.com","www.2.com","www.3.com","www.4.com","www.5.com",
+        "www.6.com","www.7.com","www.8.com","www.9.com","www.10.com"]
+      let user = auth.jwt.verify(authenticatedToken, auth.secret);
+      dummyWebsites.forEach(function(website){
+      return chai.request(app)
+        .post(`/user/${user.id}/searches`)
+        .set("Authorization", `Bearer ${authenticatedToken}`)
+        .send({search: website})
+        .then(function(res){
+          if(res.searches.length === 10) {
+            console.info("seeded websites: ", res.searches);
+          }
+        });
+      });
+    });
+    // it("POST endpoint: a user entering an eleventh search needs to see the oldest search cut away", function(){
+    //   let website = "www.11.com";
+    //   //this is the token that encrypts the credentials sent from client to server over the wire
+    //   let user = auth.jwt.verify(authenticatedToken, auth.secret);
+    //     //chai request to post the user's choice of deviceName and get back a token
+    //     return chai.request(app)
+    //       .post(`/user/${user.id}/searches`)
+    //       .set("Authorization", `Bearer ${authenticatedToken}`)
+    //       .send({search: website})
+    //       .then(function(res){
+    //         console.log("res.body: ",res.body)
+    //         res.should.have.status(201);
+    //         res.body.searches.should.be.an("array");
+    //         res.body.searches[0].should.be.an("object");
+    //         res.body.searches[0].searchURL.should.be.a("string");
+    //         res.body.searches[0].dateCreated.should.be.a("number");
+
+    //         return User.findById(user.id);
+    //       })
+    //       .then(function(_user){
+    //         _user.recentSearches.length.should.equal(1);
+    //         _user.recentSearches[0].searchURL.should.be.a("string");
+    //         _user.recentSearches[0].dateCreated.should.be.a("number");
+    //         _user.recentSearches[0].searchURL.should.equal(website);
+    //       });
+    // });
+    it("POST endpoint: a user needs to be able to add the first search to recent searches", function(){
+      let website = "www.11.com";
       //this is the token that encrypts the credentials sent from client to server over the wire
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
         //chai request to post the user's choice of deviceName and get back a token
@@ -280,16 +306,13 @@ describe('Context API', function() {
             return User.findById(user.id);
           })
           .then(function(_user){
-            _user.recentSearches.length.should.be.at.least(1);
+            _user.recentSearches.length.should.equal(1);
             _user.recentSearches[0].searchURL.should.be.a("string");
             _user.recentSearches[0].dateCreated.should.be.a("number");
             _user.recentSearches[0].searchURL.should.equal(website);
           });
     });
-    it("POST endpoint: a user adding an 11th search needs to see the oldest search removed, leaving the 10 newest searches", function(){
-      seedWebsiteData(authenticatedToken, auth.secret);
-      let eleventhWebsite = "www.11.com";
-    });
+
     it("DELETE endpoint: a user needs to be able to delete a user account", function(){
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
       return chai.request(app)
