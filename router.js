@@ -55,10 +55,10 @@ request body from form needs to be in this format:
 }
 */
 
-//endpoint to test deployed server
-router.get("/", (req,res,next) => {
-  res.status(200).json({test: "working!"});
-});
+// //endpoint to test deployed server
+// router.get("/", (req,res,next) => {
+//   res.status(200).json({test: "working!"});
+// });
 
 //endpoint creating new users i.e. registering with the site
 router.post('/users', auth.decrypt, (req,res,next) => {
