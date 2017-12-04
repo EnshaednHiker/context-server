@@ -7,7 +7,7 @@ const auth = require('../auth');
 const mongoose = require('mongoose');
 const User = require('../models')
 
-const chaiThings = require('chai-things');
+
 const should = chai.should();
 const expect = chai.expect;
 const assert = chai.assert;
@@ -16,7 +16,7 @@ const {app, runServer, closeServer} = require('../server');
 const {TEST_DATABASE_URL} = require('../config');
 
 chai.use(chaiHttp);
-chai.use(chaiThings);
+
 
 
 // generate an object representing a user.
