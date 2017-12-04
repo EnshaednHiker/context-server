@@ -164,12 +164,12 @@ router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
         let searchesNumberArray = searches.map((search) => {
           return search.dateCreated
         });
-        console.log("searchesNumberArray", searchesNumberArray);
+        //console.log("searchesNumberArray", searchesNumberArray);
         let min = Array.min(searchesNumberArray)
         oldestSearch = searches.find(search => {
           return search.dateCreated === min;
         });
-        console.log("oldestSearch: ",oldestSearch);
+        //console.log("oldestSearch: ",oldestSearch);
         //then get the right user back
         return User.findById(req.params.ID)
           .then((user)=>{
@@ -194,7 +194,17 @@ router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
   .catch(next);
 });
 //endpoint to clear (delete) recent searches
-
+router.delete('/user/:ID/searches', auth.required, (req,res,next)=>{
+  return User.findById(req.params.ID)
+    .then((user)=>{
+      if(!user){ return res.sendStatus(401); }
+      user.recentSearches = [];
+      return user.save().then((user)=>{
+        return res.status(204).send();
+      });
+    })
+    .catch(next);
+});
 
 
 module.exports = router;
