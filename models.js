@@ -67,7 +67,13 @@ userSchema.methods.toAuthSearchesJSON = function(){
     };
   },this);
 };
-
+userSchema.methods.toAuthOldestSearchJSON = function (search) {
+  return {
+    searchURL: search.searchURL,
+    dateCreated: search.dateCreated,
+    searchID: search._id
+  };
+};
 
 //the unique validator plugin has to be added prior to assigning the schema to the const User, fyi
 userSchema.plugin(uniqueValidator);

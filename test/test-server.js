@@ -1,3 +1,5 @@
+
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const auth = require('../auth');
@@ -5,13 +7,16 @@ const auth = require('../auth');
 const mongoose = require('mongoose');
 const User = require('../models')
 
+const chaiThings = require('chai-things');
 const should = chai.should();
 const expect = chai.expect;
 const assert = chai.assert;
 
 const {app, runServer, closeServer} = require('../server');
 const {TEST_DATABASE_URL} = require('../config');
+
 chai.use(chaiHttp);
+chai.use(chaiThings);
 
 
 // generate an object representing a user.
@@ -248,19 +253,39 @@ describe('Context API', function() {
       const dummyWebsites = ["www.1.com","www.2.com","www.3.com","www.4.com","www.5.com",
         "www.6.com","www.7.com","www.8.com","www.9.com","www.10.com"]
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
-      dummyWebsites.forEach(function(website){
-      return chai.request(app)
-        .post(`/user/${user.id}/searches`)
-        .set("Authorization", `Bearer ${authenticatedToken}`)
-        .send({search: website})
-        .then(function(res){
-          if(res.searches.length === 10) {
-            console.info("seeded websites: ", res.searches);
-          }
-        });
+      
+      dummyWebsites.forEach(function(website, index){
+        return chai.request(app)
+          .post(`/user/${user.id}/searches`)
+          .set("Authorization", `Bearer ${authenticatedToken}`)
+          .send({search: website})
+          .then(function(res){
+            res.body.searches.should.be.an('array');
+            res.body.searches[index].searchURL.should.be.a('string');
+            res.body.searches.length.should.equal(10);    
+          });
       });
     });
-    // it("POST endpoint: a user entering an eleventh search needs to see the oldest search cut away", function(){
+    it("POST endpoint: a user entering an eleventh search needs to have the oldest search cut away", function(){
+      let website = "www.11.com";
+      //this is the token that encrypts the credentials sent from client to server over the wire
+      let user = auth.jwt.verify(authenticatedToken, auth.secret);
+        //chai request to post the user's choice of deviceName and get back a token
+        return chai.request(app)
+          .post(`/user/${user.id}/searches`)
+          .set("Authorization", `Bearer ${authenticatedToken}`)
+          .send({search: website})
+          .then(function(res){
+            console.log("res.body: ",res.body)
+            res.should.have.status(201);
+            res.body.searches.should.be.an("array");
+            res.body.searches[0].should.be.an("object");
+            res.body.searches[0].searchURL.should.be.a("string");
+            res.body.searches[0].dateCreated.should.be.a("number");
+            res.body.searches.should.not.contain(res.body.oldestSearchRemoved);
+          });
+    });
+    // it("POST endpoint: a user needs to be able to add the first search to recent searches", function(){
     //   let website = "www.11.com";
     //   //this is the token that encrypts the credentials sent from client to server over the wire
     //   let user = auth.jwt.verify(authenticatedToken, auth.secret);
@@ -286,32 +311,6 @@ describe('Context API', function() {
     //         _user.recentSearches[0].searchURL.should.equal(website);
     //       });
     // });
-    it("POST endpoint: a user needs to be able to add the first search to recent searches", function(){
-      let website = "www.11.com";
-      //this is the token that encrypts the credentials sent from client to server over the wire
-      let user = auth.jwt.verify(authenticatedToken, auth.secret);
-        //chai request to post the user's choice of deviceName and get back a token
-        return chai.request(app)
-          .post(`/user/${user.id}/searches`)
-          .set("Authorization", `Bearer ${authenticatedToken}`)
-          .send({search: website})
-          .then(function(res){
-            console.log("res.body: ",res.body)
-            res.should.have.status(201);
-            res.body.searches.should.be.an("array");
-            res.body.searches[0].should.be.an("object");
-            res.body.searches[0].searchURL.should.be.a("string");
-            res.body.searches[0].dateCreated.should.be.a("number");
-
-            return User.findById(user.id);
-          })
-          .then(function(_user){
-            _user.recentSearches.length.should.equal(1);
-            _user.recentSearches[0].searchURL.should.be.a("string");
-            _user.recentSearches[0].dateCreated.should.be.a("number");
-            _user.recentSearches[0].searchURL.should.equal(website);
-          });
-    });
 
     it("DELETE endpoint: a user needs to be able to delete a user account", function(){
       let user = auth.jwt.verify(authenticatedToken, auth.secret);

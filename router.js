@@ -160,7 +160,6 @@ router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
     searches = user.recentSearches;
     return user
       .save().then( () =>{
-        console.log('current state of the searches: ', searches);
         //find oldest entry
         let searchesNumberArray = searches.map((search) => {
           return search.dateCreated
@@ -174,7 +173,6 @@ router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
         //then get the right user back
         return User.findById(req.params.ID)
           .then((user)=>{
-            console.log("did I get my user again?", user);
             //if there are more than 10 searches
             if (user.recentSearches.length > 10) {
               //remove the oldest search
@@ -182,7 +180,7 @@ router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
                 //and save it
                 return user.save().then((user)=>{
                     //and send the response with the updated list
-                    return res.status(201).json({searches:user.toAuthSearchesJSON()});
+                    return res.status(201).json({searches:user.toAuthSearchesJSON(),oldestSearchRemoved:user.toAuthOldestSearchJSON(oldestSearch)});
                   });
               });
             }
