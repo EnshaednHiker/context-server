@@ -249,80 +249,79 @@ describe('Context API', function() {
             expect(_user.validPassword(userOldCredentials.password, _user)).to.be.true;
           }); 
     });
-    it("POST endpoint: a user entering 10 websites sees all 10 websites get added", function(){
-      const dummyWebsites = ["www.1.com","www.2.com","www.3.com","www.4.com","www.5.com",
-        "www.6.com","www.7.com","www.8.com","www.9.com","www.10.com"]
+    it("POST endpoint: a user annotating 10 passages sees all 10 passages get added", function(){
+      const dummyAnnotations = [{anno:"text1"},{anno:"text2"},{anno:"text3"},{anno:"text4"},{anno:"text5"},
+      {anno:"text6"},{anno:"text7"},{anno:"text8"},{anno:"text9"},{anno:"text10"}]
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
       
-      dummyWebsites.forEach(function(website, index){
+      dummyAnnotations.forEach(function(annotation, index){
         return chai.request(app)
-          .post(`/user/${user.id}/searches`)
+          .post(`/user/${user.id}/annotations`)
           .set("Authorization", `Bearer ${authenticatedToken}`)
-          .send({search: website})
+          .send({annotation: annotation})
           .then(function(res){
-            res.body.searches.should.be.an('array');
-            res.body.searches[index].searchURL.should.be.a('string');
-            res.body.searches.length.should.equal(10);    
+            res.body.annotations.should.be.an('array');
+            res.body.annotations[index].annotation.should.be.an('object');
+            res.body.annotations.length.should.equal(10);    
           });
       });
     });
     it("POST endpoint: a user entering an eleventh search needs to have the oldest search cut away", function(){
-      let website = "www.11.com";
+      let annoObject = {anno:"text11"};
       //this is the token that encrypts the credentials sent from client to server over the wire
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
         //chai request to post the user's choice of deviceName and get back a token
         return chai.request(app)
-          .post(`/user/${user.id}/searches`)
+          .post(`/user/${user.id}/annotations`)
           .set("Authorization", `Bearer ${authenticatedToken}`)
-          .send({search: website})
+          .send({annotation: annoObject})
           .then(function(res){
             res.should.have.status(201);
-            res.body.searches.should.be.an("array");
-            res.body.searches[0].should.be.an("object");
-            res.body.searches[0].searchURL.should.be.a("string");
-            res.body.searches[0].dateCreated.should.be.a("number");
-            res.body.searches.should.not.contain(res.body.oldestSearchRemoved);
+            res.body.annotations.should.be.an("array");
+            res.body.annotations[0].should.be.an("object");
+            res.body.annotations[0].dateCreated.should.be.a("number");
+            res.body.annotations.should.not.contain(res.body.oldestSearchRemoved);
           });
     });
-    it("DELETE endpoint: a user needs to be able to clear out all recent searches", function(){
+    it("DELETE endpoint: a user needs to be able to clear out all recent annotations", function(){
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
       //chai request to post the user's choice of deviceName and get back a token
       return chai.request(app)
-        .delete(`/user/${user.id}/searches`)
+        .delete(`/user/${user.id}/annotations`)
         .set("Authorization", `Bearer ${authenticatedToken}`)
         .then(function(res){
           return User.findById(user.id).exec();        
         })
         .then(function(_user){
-          expect(_user.recentSearches).to.have.a.lengthOf(0);
-          _user.recentSearches.should.be.an('array');
+          expect(_user.annotations).to.have.a.lengthOf(0);
+          _user.annotations.should.be.an('array');
         });
 
     });
-    it("POST endpoint: a user needs to be able to add the first search to recent searches", function(){
-      let website = "www.12.com";
+    it("POST endpoint: a user needs to be able to add the first annoations to a user without any annotations", function(){
+      let annoObject = {anno:"text12"};
       //this is the token that encrypts the credentials sent from client to server over the wire
       let user = auth.jwt.verify(authenticatedToken, auth.secret);
         //chai request to post the user's choice of deviceName and get back a token
         return chai.request(app)
-          .post(`/user/${user.id}/searches`)
+          .post(`/user/${user.id}/annotations`)
           .set("Authorization", `Bearer ${authenticatedToken}`)
-          .send({search: website})
+          .send({annotation: annoObject})
           .then(function(res){
-            
             res.should.have.status(201);
-            res.body.searches.should.be.an("array");
-            res.body.searches[0].should.be.an("object");
-            res.body.searches[0].searchURL.should.be.a("string");
-            res.body.searches[0].dateCreated.should.be.a("number");
+            res.body.annotations.should.be.an("array");
+            res.body.annotations.should.have.a.lengthOf(1);
+            res.body.annotations[0].should.be.an("object");
+            res.body.annotations[0].dateCreated.should.be.a("number");
 
             return User.findById(user.id);
           })
           .then(function(_user){
-            _user.recentSearches.length.should.equal(1);
-            _user.recentSearches[0].searchURL.should.be.a("string");
-            _user.recentSearches[0].dateCreated.should.be.a("number");
-            _user.recentSearches[0].searchURL.should.equal(website);
+            _user.annotations.length.should.equal(1);
+            _user.annotations.should.be.an("array");
+            _user.annotations[0].should.be.an("object");
+            _user.annotations[0].dateCreated.should.be.a("number");
+            _user.annotations[0].annotation.should.deep.equal(annoObject);
           });
     });
 

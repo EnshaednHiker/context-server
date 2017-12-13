@@ -137,68 +137,69 @@ router.delete('/user/:ID', auth.required, (req,res,next)=>{
 });
 
 //endpoint to get recent searches
-router.get('/user/:ID/searches', auth.required, (req,res,next)=>{
+router.get('/user/:ID/annotations', auth.required, (req,res,next)=>{
   return User.findById(req.params.ID)
     .then((user)=>{
       if(!user){ return res.sendStatus(401); }
-      return res.json({searches:user.toAuthSearchesJSON()});
+      return res.json({searches:user.toAuthAnnotationsJSON()});
     });
 });
 
-//endpoint to post new searches to the recent searches
-router.post('/user/:ID/searches', auth.required, (req,res,next)=>{
-  let searches;
-  let oldestSearch;
+//endpoint to post new annotations to the database
+router.post('/user/:ID/annotations', auth.required, (req,res,next)=>{
+  let annotations;
+  let oldestAnnotation;
   return User.findById(req.params.ID)
   .then((user)=>{
     if(!user){ return res.sendStatus(401); }
     
-    let search = user.recentSearches.create({
-      searchURL:req.body.search    
+    let annotation = user.annotations.create({
+      annotation:req.body.annotation    
     });
-    user.recentSearches.addToSet(search);
-    searches = user.recentSearches;
+    
+    user.annotations.addToSet(annotation);
+    annotations = user.annotations;
     return user
       .save().then( () =>{
         //find oldest entry
-        let searchesNumberArray = searches.map((search) => {
-          return search.dateCreated
+        let annotationsNumberArray = annotations.map((annotation) => {
+          return annotation.dateCreated
         });
-        //console.log("searchesNumberArray", searchesNumberArray);
-        let min = Array.min(searchesNumberArray)
-        oldestSearch = searches.find(search => {
-          return search.dateCreated === min;
+        //console.log("annotationsNumberArray", annotationsNumberArray);
+        let min = Array.min(annotationsNumberArray)
+        oldestAnnotation = annotations.find(annotation => {
+          return annotation.dateCreated === min;
         });
-        //console.log("oldestSearch: ",oldestSearch);
+        //console.log("oldestAnnotation: ",oldestAnnotation);
         //then get the right user back
         return User.findById(req.params.ID)
           .then((user)=>{
-            //if there are more than 10 searches
-            if (user.recentSearches.length > 10) {
-              //remove the oldest search
-              return user.recentSearches.id(oldestSearch._id).remove().then( () =>{
+            //if there are more than 10 annotations
+            if (user.annotations.length > 10) {
+              //remove the oldest annotation
+              return user.annotations.id(oldestAnnotation._id).remove().then( () =>{
                 //and save it
                 return user.save().then((user)=>{
                     //and send the response with the updated list
-                    return res.status(201).json({searches:user.toAuthSearchesJSON(),oldestSearchRemoved:user.toAuthOldestSearchJSON(oldestSearch)});
+                    return res.status(201).json({annotations:user.toAuthAnnotationsJSON(),oldestAnnotationRemoved:user.toAuthOldestAnnotationJSON(oldestAnnotation)});
                   });
               });
             }
             //else just send the response with the list that is 10 or less
             else {
-              return res.status(201).json({searches:user.toAuthSearchesJSON()});
+              return res.status(201).json({annotations:user.toAuthAnnotationsJSON()});
             }
         }) 
     });
   })
   .catch(next);
 });
-//endpoint to clear (delete) recent searches
-router.delete('/user/:ID/searches', auth.required, (req,res,next)=>{
+//endpoint to clear (delete) annotations
+router.delete('/user/:ID/annotations', auth.required, (req,res,next)=>{
   return User.findById(req.params.ID)
     .then((user)=>{
       if(!user){ return res.sendStatus(401); }
-      user.recentSearches = [];
+      user.annotations = [];
       return user.save().then((user)=>{
         return res.status(204).send();
       });

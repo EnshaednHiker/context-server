@@ -6,8 +6,8 @@ const jwt = require('jsonwebtoken');
 const {SECRET} = require('./config');
 
 //Device schema requires that the device name be unique and is required, is a child of the user schema
-const recentSearchesSchema = mongoose.Schema({
-  searchURL: {type: String, required: [true, "can't be blank"]},
+const annotationsSchema = mongoose.Schema({
+  annotation: {type: Object, required: [true, "can't be blank"]},
   dateCreated: {type: Number, default: Date.now}
 }, {timestamps: true});
 
@@ -17,7 +17,7 @@ const userSchema = mongoose.Schema({
   email: {type: String, required: [true, "can't be blank"], match: [/\S+@\S+\.\S+/, 'is invalid'], unique: true},
   hash: String,
   salt: String,
-  recentSearches: [recentSearchesSchema]
+  annotations: [annotationsSchema]
 }, {timestamps: true});
 
 //Encrypts password via crypto before seeding into the database
@@ -57,21 +57,21 @@ userSchema.methods.validPassword = function (password, user){
 
 //Child schemas do not get their own instance methods, have to assign them to the parent
 //JSON to be sent to the client after a new device created or updated or deleted
-userSchema.methods.toAuthSearchesJSON = function(){
+userSchema.methods.toAuthAnnotationsJSON = function(annotations){
 
-  return this.recentSearches.map(function(search){
+  return this.annotations.map(function(annotation){
     return {
-      searchURL: search.searchURL,
-      dateCreated: search.dateCreated,
-      searchID: search._id
+      annotation: annotation.annotation,
+      dateCreated: annotation.dateCreated,
+      annotationID: annotation._id
     };
   },this);
 };
-userSchema.methods.toAuthOldestSearchJSON = function (search) {
+userSchema.methods.toAuthOldestAnnotationJSON = function (annotation) {
   return {
-    searchURL: search.searchURL,
-    dateCreated: search.dateCreated,
-    searchID: search._id
+    annotation: annotation.annotation,
+    dateCreated: annotation.dateCreated,
+    annotationID: annotation._id
   };
 };
 
