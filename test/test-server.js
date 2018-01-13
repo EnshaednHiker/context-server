@@ -266,7 +266,7 @@ describe('Context API', function() {
           });
       });
     });
-    it("POST endpoint: a user entering an eleventh search needs to have the oldest search cut away", function(){
+    it("POST endpoint: a user entering an eleventh annotation needs to have the oldest annotation cut away", function(){
       let annoObject = {anno:"text11"};
       //this is the token that encrypts the credentials sent from client to server over the wire
       let user = auth.jwt.verify(authenticatedToken, auth.secret);

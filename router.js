@@ -141,7 +141,7 @@ router.get('/user/:ID/annotations', auth.required, (req,res,next)=>{
   return User.findById(req.params.ID)
     .then((user)=>{
       if(!user){ return res.sendStatus(401); }
-      return res.json({searches:user.toAuthAnnotationsJSON()});
+      return res.json({annotations:user.toAuthAnnotationsJSON()});
     });
 });
 
