@@ -69,6 +69,14 @@ MongoDB hosted on [mLab](http://docs.mlab.com/).
 
 * **Nick Bingham** - [EnshaednHiker](https://github.com/EnshaednHiker)
 
+## Development Roadmap
+
+* Retain paragraph separation in returned annotated strings
+* Collapsible hamburger menu for mobile view
+* Build proxy server of DBPedia Spotlight for avoid running the site in http issue. Currently, I have to host the site in http, not https, in order to access the DBPedia Spotlight API
+* Social media elements with blog roll that shows user annotations
+* Sharing social media site elements where study meets social media
+
 ## License
 
 This project is licensed under the ISC License - see the [LICENSE.md](LICENSE.md) file for details
