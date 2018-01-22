@@ -10,6 +10,8 @@ Context is a responsive, full-stack app that allows users to annotate a text's n
 
 Context was built around the idea that a user's reading experience on the web could be improved by providing, you guessed it, more context to the content being read.  By providing a brief (and sometimes not so brief) abstract (or definition, really) to a highlighted named entity along with external links to websites about that named entity, it is my hope that the user gets some added benefit. Context is an annotation service to take content from the web and add annotations. [This](https://github.com/EnshaednHiker/context) is the main entry point for the project with a detailed tutorial on both the server and web client.
 
+Perfect use case: you a lay person is trying to muddle through an article from the journal *Nature*, but you don't understand every tenth word. Context can take articles written for specialists and turn them into something more readable for the lay person.
+
 Context is comprised of two main components: [server](https://github.com/EnshaednHiker/context-server) and [webclient](https://github.com/EnshaednHiker/context-webclient).
 
 ## Screenshots
